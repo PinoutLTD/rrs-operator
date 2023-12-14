@@ -88,6 +88,5 @@ class RobonomicsHelper:
             self._is_subscription_alive,
         ).start()
         if self.subscriber._subscription.is_alive():
-            print(self.subscriber._subscription.is_alive())
             return
         self._resubscribe()
