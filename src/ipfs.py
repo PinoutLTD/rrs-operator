@@ -69,10 +69,9 @@ class IPFSHelpder:
         self._logger.info(f"IPFS:  Parsing logs... Hash: {hash}")
         with open(f"{self.temp_dir}/issue_description.json") as f:
             issue = json.load(f)
-            email = issue["e-mail"]
             phone = issue["phone_number"]
             description = issue["description"]
-        return email, phone, description
+        return phone, description
 
     def clean_temp_dir(self) -> None:
         """Remove the temporary directory and its content"""

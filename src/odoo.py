@@ -36,7 +36,9 @@ class OdooHelper:
         except Exception as e:
             self._logger.error(f"Couldn't connect to the db: {e}")
 
-    def create_ticket(self, email: str, robonomics_address: str, phone: str, description: str) -> tp.Optional[int]:
+    def create_ticket(
+        self, email: str, robonomics_address: str, phone: str, description: str, ipfs_hash: str
+    ) -> tp.Optional[int]:
         """Creates ticket in Helpdesk module
 
         :param email: Customer's email address
@@ -50,7 +52,7 @@ class OdooHelper:
         priority = "3"
         channel_id = 5
         name = f"Issue from {robonomics_address}"
-        description = f"Issue from HA: {description}"
+        description = f"Hash: {ipfs_hash} .Issue from HA: {description}"
         try:
             ticket_id = self._connection.execute_kw(
                 ODOO_DB,
@@ -125,3 +127,32 @@ class OdooHelper:
         except Exception as e:
             self._logger.error(f"Couldn't create note: {e}")
             return None
+
+    def _find_partner_id(self, address: str) -> tp.Union[int, bool]:
+        """Find a partner id by the parachain address. This id is used to retrive the partner's email.
+        :param address: Partner's address in Robonomics parachain
+
+        :return: The partner id or false.
+        """
+        id = self._connection.execute_kw(
+            ODOO_DB, self._uid, ODOO_PASSWORD, "res.partner", "search", [[("name", "=", address)]]
+        )
+        self._logger.debug(f"Find partner with id: {id}")
+        return id
+
+    def find_partner_email(self, address) -> tp.Optional[str]:
+        """Find a partner email.
+        :param address: Partner's address in Robonomics parachain
+
+        :return: The partner email or None.
+        """
+        partner_id = self._find_partner_id(address)
+        if partner_id:
+            partner_data = self._connection.execute_kw(
+                ODOO_DB, self._uid, ODOO_PASSWORD, "res.partner", "read", [partner_id[0]], {"fields": ["email"]}
+            )
+            email = partner_data[0]["email"]
+            self._logger.debug(f"Find partner's email: {email}")
+            return email
+        else:
+            self._logger.error(f"Couldn't find partner for {address}")

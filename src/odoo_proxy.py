@@ -9,7 +9,7 @@ class OdooProxy:
         self.odoo_helper = OdooHelper()
 
     @retry(wait=wait_fixed(5))
-    def create_ticket(self, email: str, robonomics_address_from: str, phone, description: str) -> int:
+    def create_ticket(self, email: str, robonomics_address_from: str, phone, description: str, ipfs_hash: str) -> int:
         """Creats ticket until it will be created.
         :param email: Customer's email address
         :param robonomics_address: Customer's address in Robonomics parachain
@@ -19,7 +19,7 @@ class OdooProxy:
         :return: Ticket id
         """
         self.odoo_helper._logger.debug("Creating ticket...")
-        ticket_id = self.odoo_helper.create_ticket(email, robonomics_address_from, phone, description)
+        ticket_id = self.odoo_helper.create_ticket(email, robonomics_address_from, phone, description, ipfs_hash)
         if not ticket_id:
             raise Exception("Failed to create ticket")
         self.odoo_helper._logger.debug(f"Ticket created. Ticket id: {ticket_id}")
@@ -37,3 +37,16 @@ class OdooProxy:
         if not is_note_created:
             raise Exception("Failed to create note")
         self.odoo_helper._logger.debug(f"Note created.")
+
+    @retry(wait=wait_fixed(5))
+    def find_partner_email(self, address) -> str:
+        """Find a partner email.
+        :param address: Partner's address in Robonomics parachain
+
+        :return: The partner email.
+        """
+        email = self.odoo_helper.find_partner_email(address)
+        if not email:
+            raise Exception("Failed to find email")
+        self.odoo_helper._logger.debug(f"Found email: {email}")
+        return email
